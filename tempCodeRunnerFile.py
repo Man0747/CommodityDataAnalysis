@@ -87,13 +87,10 @@ def getData(start_date, end_date):
 # Fetch start date from the LastRun table
 start_date = get_start_date()
 
-# If no start_date is found, exit the program
+# If no start_date is found, use a default start date
 if not start_date:
     print("No start date found in the database. Exiting the program.")
     sys.exit()
-
-# Increment start date by 1 day
-start_date += timedelta(days=1)
 
 # Set the end date to today's date
 end_date = date.today()
