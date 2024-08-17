@@ -41,19 +41,25 @@ def update_start_date(new_date):
     connection.close()
 
 def getData(start_date, end_date):
-    
-    base_url = 'https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24'
-    api_key = '579b464db66ec23bdd000001c448725136334a8c46b2f7e597535cc1'
-    
     # Define the output path
     output_path = 'F:/Education/COLLEGE/PROGRAMING/Python/PROJECTS/CommodityDataAnalysisProject/Bronze'
+    
+    # API URLs
+    base_url_past = 'https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24'
+    base_url_today = 'https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070'
+    api_key = '579b464db66ec23bdd000001c448725136334a8c46b2f7e597535cc1'
     
     # Initialize date
     current_date = start_date
     
     while current_date <= end_date:
         formatted_date = current_date.strftime('%d/%m/%Y')
-        url = f'{base_url}?api-key={api_key}&format=csv&limit=10000&filters%5BArrival_Date%5D={formatted_date}'
+        
+        # Choose the correct API based on whether the date is today or not
+        if current_date == date.today():
+            url = f'{base_url_today}?api-key={api_key}&format=csv&limit=100000'
+        else:
+            url = f'{base_url_past}?api-key={api_key}&format=csv&limit=10000&filters%5BArrival_Date%5D={formatted_date}'
         
         output_directory = os.path.join(output_path, str(current_date.year), str(current_date.month), str(current_date.day))
         if not os.path.exists(output_directory):
@@ -100,4 +106,3 @@ end_date = date.today()
 
 getData(start_date, end_date)
 
-#https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=579b464db66ec23bdd000001c448725136334a8c46b2f7e597535cc1&format=csv&limit=100000
