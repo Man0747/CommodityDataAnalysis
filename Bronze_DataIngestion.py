@@ -99,3 +99,5 @@ start_date += timedelta(days=1)
 end_date = date.today()
 
 getData(start_date, end_date)
+
+#https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=579b464db66ec23bdd000001c448725136334a8c46b2f7e597535cc1&format=csv&limit=100000
