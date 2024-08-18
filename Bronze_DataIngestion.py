@@ -85,7 +85,7 @@ def getData(start_date, end_date):
     
     update_start_date(end_date)
 
-# Fetch start date from the LastRun table
+# Fetch start date from the LastRun table from the database
 start_date = get_start_date()
 
 if not start_date:
