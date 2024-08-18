@@ -5,25 +5,17 @@ from datetime import date, timedelta
 import mysql.connector
 import sys
 
-def create_db_connection():
-    """Establishes and returns a connection to the MySQL database."""
-    try:
-        connection = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='admin',
-            database='commoditydataanaylsis'
-        )
-        return connection
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        sys.exit()
-
 def get_start_date():
-    """Fetches the start date from the LastRun table."""
-    connection = create_db_connection()
+    # Establish connection to MySQL database
+    connection = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='admin',
+        database='commoditydataanaylsis'
+    )
     cursor = connection.cursor()
 
+    # Fetch the start_date from the LastRun table
     cursor.execute("SELECT run_date FROM LastRun ORDER BY id DESC LIMIT 1")
     result = cursor.fetchone()
     connection.close()
@@ -34,42 +26,47 @@ def get_start_date():
         return None
 
 def update_start_date(new_date):
-    """Updates the LastRun table with the new date."""
-    connection = create_db_connection()
+    # Establish connection to MySQL database
+    connection = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='admin',
+        database='commoditydataanaylsis'
+    )
     cursor = connection.cursor()
 
+    # Update the LastRun table with the new date
     cursor.execute("UPDATE LastRun SET run_date = %s WHERE id = 1", (new_date,))
     connection.commit()
     connection.close()
 
 def getData(start_date, end_date):
-    """Fetches and saves data from the API within the given date range."""
+    
+    base_url = 'https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24'
+    api_key = '579b464db66ec23bdd000001c448725136334a8c46b2f7e597535cc1'
+    
+    # Define the output path
     output_path = 'F:/Education/COLLEGE/PROGRAMING/Python/PROJECTS/CommodityDataAnalysisProject/Bronze'
     
-    base_url_past = os.getenv('BASE_URL_PAST')
-    base_url_today = os.getenv('BASE_URL_TODAY')
-    api_key = os.getenv('API_KEY')
-    
+    # Initialize date
     current_date = start_date
     
     while current_date <= end_date:
         formatted_date = current_date.strftime('%d/%m/%Y')
-        
-        if current_date == date.today():
-            url = f'{base_url_today}?api-key={api_key}&format=csv&limit=100000'
-        else:
-            url = f'{base_url_past}?api-key={api_key}&format=csv&limit=10000&filters%5BArrival_Date%5D={formatted_date}'
+        url = f'{base_url}?api-key={api_key}&format=csv&limit=10000&filters%5BArrival_Date%5D={formatted_date}'
         
         output_directory = os.path.join(output_path, str(current_date.year), str(current_date.month), str(current_date.day))
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
         
+        # Fetch and save data
         try:
             with requests.Session() as session:
                 response = session.get(url)
                 response.raise_for_status()  # Check if the request was successful
                 csv_content = response.content
                 
+                # Generate the filename with date and time
                 filename = f'commoditydata_{formatted_date.replace("/", "")}.csv'
                 file_path = os.path.join(output_directory, filename)
                 
@@ -81,18 +78,21 @@ def getData(start_date, end_date):
         except requests.exceptions.RequestException as e:
             print(f"An error occurred: {e}")
         
+        # Move to the next day
         current_date += timedelta(days=1)
     
+    # Update the start_date in the LastRun table
     update_start_date(end_date)
 
-# Fetch start date from the LastRun table from the database
+# Fetch start date from the LastRun table
 start_date = get_start_date()
 
+# If no start_date is found, use a default start date
 if not start_date:
     print("No start date found in the database. Exiting the program.")
     sys.exit()
 
-start_date += timedelta(days=1)
+# Set the end date to today's date
 end_date = date.today()
 
 getData(start_date, end_date)
