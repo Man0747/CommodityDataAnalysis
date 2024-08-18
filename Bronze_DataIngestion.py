@@ -4,6 +4,7 @@ import os
 from datetime import date, timedelta
 import mysql.connector
 import sys
+from dotenv import load_dotenv
 
 def create_db_connection():
     """Establishes and returns a connection to the MySQL database."""
@@ -46,10 +47,12 @@ def getData(start_date, end_date):
     """Fetches and saves data from the API within the given date range."""
     output_path = 'F:/Education/COLLEGE/PROGRAMING/Python/PROJECTS/CommodityDataAnalysisProject/Bronze'
     
+    load_dotenv()
+
     base_url_past = os.getenv('BASE_URL_PAST')
     base_url_today = os.getenv('BASE_URL_TODAY')
     api_key = os.getenv('API_KEY')
-    
+
     current_date = start_date
     
     while current_date <= end_date:
