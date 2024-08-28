@@ -1,57 +1,87 @@
-import os
 import pandas as pd
+import os
 import glob
+from datetime import datetime, timedelta
+import mysql.connector
 
-# Base directory where the CSV files are stored
-base_directory = 'F:\\Education\\COLLEGE\\PROGRAMING\\Python\\PROJECTS\\CommodityDataAnalysisProject'
+# Function to get dates from the MySQL tables
+def get_dates_from_db():
+    connection = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="admin",
+        database="commoditydataanaylsis"
+    )
+    cursor = connection.cursor()
 
-# Define the years you want to process
-years = ['2022', '2021','2020' ]
+    # Get the last processed date
+    cursor.execute("SELECT run_date FROM LastGoldProcessed ORDER BY id DESC LIMIT 1")
+    start_date = cursor.fetchone()[0]
 
-# List to store DataFrames
-dataframes = []
+    # Get the last run date
+    cursor.execute("SELECT run_date FROM Lastrun ORDER BY id DESC LIMIT 1")
+    end_date = cursor.fetchone()[0]
 
-# Loop through the specified years
-for year in years:
-    # Construct the path for the year folder
-    year_folder_path = os.path.join(base_directory, 'Silver', year)
+    cursor.close()
+    connection.close()
+
+    return start_date, end_date
+
+# Function to process files from Silver to Gold with joins
+def process_silver_to_gold_with_joins(start_date, end_date):
+    path = 'F:/Education/COLLEGE/PROGRAMING/Python/PROJECTS/CommodityDataAnalysisProject'
     
-    # Recursively find all CSV files in the year folder
-    csv_files = glob.glob(os.path.join(year_folder_path, '**', '*.csv'), recursive=True)
+    # Load unique markets and commodities CSVs
+    unique_markets = pd.read_csv('F:\\Education\\COLLEGE\\PROGRAMING\\Python\\PROJECTS\\CommodityDataAnalysisProject\\unique_markets_with_ids.csv')
+    unique_commodities = pd.read_csv('F:\\Education\\COLLEGE\\PROGRAMING\\Python\\PROJECTS\\CommodityDataAnalysisProject\\unique_commodities_with_ids.csv')
     
-    # Read and store each CSV into the DataFrames list
-    for file in csv_files:
-        df = pd.read_csv(file)
-        dataframes.append(df)
+    # Increment start_date by 1 day before starting the processing
+    start_date += timedelta(days=1)
 
-# Concatenate all DataFrames into one DataFrame
-data = pd.concat(dataframes, ignore_index=True)
+    # Loop through each date in the range
+    date = start_date
+    while date <= end_date:
+        year = date.strftime("%Y")
+        month = str(date.month)
+        day = str(date.day)
+        
+        silver_path = os.path.join(path, 'Silver', year, month, day)
+        gold_path = os.path.join(path, 'Gold', year, month, day)
+        
+        if not os.path.exists(gold_path):
+            os.makedirs(gold_path)
 
-# Ensure 'Arrival_Date' column is in datetime format
-data['Arrival_Date'] = pd.to_datetime(data['Arrival_Date'])
+        csv_files = glob.glob(silver_path + "/*.csv")
 
-# Load the calendar CSV file
-calendar_path = os.path.join(base_directory, 'calendar.csv')
-calendar_df = pd.read_csv(calendar_path)
+        for file in csv_files:
+            df = pd.read_csv(file)
 
-# Ensure 'date' column in calendar_df is in datetime format
-# calendar_df['date'] = pd.to_datetime(calendar_df['date'])
+            # Perform joins with unique markets and commodities
+            df = pd.merge(df, unique_markets, left_on=['State', 'District', 'Market'], right_on=['market_state', 'market_district', 'market_name'], how='left')
+            df = pd.merge(df, unique_commodities, left_on=['Commodity', 'Variety', 'Grade'], right_on=['commodity_name', 'commodity_variety', 'commodity_grade'], how='left')
+            
+            # df['Mean_Price'] = df[['Min_Price', 'Max_Price', 'Modal_Price']].mean(axis=1)
 
-# Merge with calendar data to get the correct week numbers
-merged_data = pd.merge(data, calendar_df,left_on='Arrival_Date_Key', right_on='Date_Key', how='left')
+            # Remove redundant columns after joins
+            df.drop(columns=['market_state' ,'State','District','Commodity','Market','Variety', 'Grade', 'market_district', 'market_name', 'commodity_name', 'commodity_variety', 'commodity_grade'], inplace=True)
 
-# Group by year, week, State, District, Market, Commodity, and Variety
-weekly_data = merged_data.groupby(['year', 'week', 'State', 'District', 'Market', 'Commodity', 'Variety']).agg({
-    'Min_Price': 'mean',
-    'Max_Price': 'mean',
-    'Modal_Price': 'mean'
-}).reset_index()
+            # Example transformations for Gold layer (e.g., calculating mean price)
 
-# Define the output filename for the single aggregated CSV file
-output_filename = 'aggregated_weekly_data.csv'
-output_path = os.path.join(base_directory, output_filename)
+            # Save the processed file to the Gold directory
+            original_filename = os.path.basename(file).replace('Silver_', '')
+            new_filename = f"Gold_{original_filename}"
 
-# Write the aggregated data to the CSV file
-weekly_data.to_csv(output_path, index=False)
+            output_file = os.path.join(gold_path, new_filename)
 
-print("Aggregated CSV file generated successfully.")
+            df.to_csv(output_file, index=False)
+
+        print(f"Processed {len(csv_files)} files and saved to {gold_path}")
+
+        # Move to the next day
+        date += timedelta(days=1)
+
+# Get dates from the database
+start_date, end_date = get_dates_from_db()
+
+# Process files from Silver to Gold with joins between the incremented start date and the end date
+process_silver_to_gold_with_joins(start_date, end_date)
