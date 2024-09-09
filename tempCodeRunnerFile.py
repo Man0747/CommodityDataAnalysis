@@ -1,1 +1,1 @@
-ttps://api.opencagedata.com/geocode/v1/json?q={query}&key={api_key}
+\
