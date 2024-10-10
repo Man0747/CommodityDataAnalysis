@@ -6,10 +6,10 @@ import glob
 base_directory = 'F:\\Education\\COLLEGE\\PROGRAMING\\Python\\PROJECTS\\CommodityDataAnalysisProject'
 
 # Define the years you want to process
-years = ['2023','2022','2021','2020','2019','2018','2017','2016','2015','2014','2013','2012','2011','2010','2009','2008','2007','2006','2005','2004','2003']  # Add more
-
+# years = ['2023','2022','2021','2020','2019','2018','2017','2016','2015','2014','2013','2012','2011','2010','2009','2008','2007','2006','2005','2004','2003']  # Add more
+years = ['2024'] 
 # Define the commodities you want to process
-commodities = ['Onion']
+commodities = ['Tomato']
 
 # Define the market you want to filter
 market_name = 'Azadpur'  # Specify the market name you want
@@ -22,7 +22,7 @@ calendar_df = pd.read_csv(calendar_path)
 calendar_df['Date_Key'] = calendar_df['Date_Key'].astype('int32')
 
 # Define the output filename for the single aggregated CSV file
-output_filename = f'aggregated_daily_data_{market_name}_{commodities[0]}_commodity2023-2003.csv'
+output_filename = f'aggregated_daily_data_{market_name}_{commodities[0]}_commodity2024.csv'
 output_path = os.path.join(base_directory, output_filename)
 
 # List to store results for incremental concatenation

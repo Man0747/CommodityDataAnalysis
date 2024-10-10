@@ -6,10 +6,10 @@ import glob
 base_directory = 'F:\\Education\\COLLEGE\\PROGRAMING\\Python\\PROJECTS\\CommodityDataAnalysisProject'
 
 # Define the years you want to process
-years = ['2023', '2022']  # Add more years as needed
+years = ['2023', '2022','2021','2020','2019','2018']  # Add more years as needed
 
 # Define the commodities you want to process
-commodities = ['Onion']  # Add more commodities as needed
+commodities = ['Tomato']  # Add more commodities as needed
 
 # Define the markets you want to process
 markets = ['Azadpur']  # Add more markets as needed
