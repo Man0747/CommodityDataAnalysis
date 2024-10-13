@@ -1,39 +1,45 @@
 import mysql.connector
 import pandas as pd
 
-# Database configuration
-db_config = {
-        'user': 'root',      # Replace with your MySQL username
-        'password': 'admin',  # Replace with your MySQL password
-        'host': 'localhost',          # Replace with your MySQL host
-        'database': 'commoditydataanaylsis'   # Replace with your MySQL database name
-    }
+def unique_markets_SqlTransfer():
 
-# Path to the CSV file
-csv_file_path = r'F:\Education\COLLEGE\PROGRAMING\Python\PROJECTS\CommodityDataAnalysisProject\unique_markets_with_ids.csv'
+    # Database configuration
+    db_config = {
+            'user': 'root',      # Replace with your MySQL username
+            'password': 'admin',  # Replace with your MySQL password
+            'host': 'localhost',          # Replace with your MySQL host
+            'database': 'commoditydataanaylsis'   # Replace with your MySQL database name
+        }
 
-# Read the CSV file into a DataFrame
-final_df = pd.read_csv(csv_file_path)
+    # Path to the CSV file
+    csv_file_path = r'F:\Education\COLLEGE\PROGRAMING\Python\PROJECTS\CommodityDataAnalysisProject\Dim_MarketDetails.csv'
 
-# Establish database connection
-connection = mysql.connector.connect(**db_config)
-cursor = connection.cursor()
+    # Read the CSV file into a DataFrame
+    final_df = pd.read_csv(csv_file_path)
 
-# Table name
-table_name = 'dim_marketdetails'
+    # Establish database connection
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
 
-# Generate the dynamic SQL insert query
-insert_query = f'INSERT INTO {table_name} ({", ".join(final_df.columns)}) VALUES ({", ".join(["%s" for _ in final_df.columns])})'
+    # Table name
+    table_name = 'dim_marketdetails'
+    delete_query = f'DELETE FROM {table_name}'
 
-# Convert the DataFrame to a list of tuples
-data = final_df.values.tolist()
+    # Execute the delete query
+    cursor.execute(delete_query)
+    connection.commit()
+    # Generate the dynamic SQL insert query
+    insert_query = f'INSERT INTO {table_name} ({", ".join(final_df.columns)}) VALUES ({", ".join(["%s" for _ in final_df.columns])})'
 
-# Execute the insert query for each row in the DataFrame
-cursor.executemany(insert_query, data)
-connection.commit()
+    # Convert the DataFrame to a list of tuples
+    data = final_df.values.tolist()
 
-# Close the cursor and connection
-cursor.close()
-connection.close()
+    # Execute the insert query for each row in the DataFrame
+    cursor.executemany(insert_query, data)
+    connection.commit()
 
-print("Data successfully inserted into the unique_markets table.")
+    # Close the cursor and connection
+    cursor.close()
+    connection.close()
+
+    print("Data successfully inserted into the unique_markets table.")
